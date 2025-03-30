@@ -16,23 +16,31 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Configuración CORS más permisiva para pruebas
+// Configuración CORS específica para tu dominio frontend
 const corsOptions = {
-  origin: '*',
+  origin: ['https://aiagent-1-tvdv.onrender.com', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'x-api-key', 'anthropic-version']
+  allowedHeaders: ['Content-Type', 'x-api-key', 'anthropic-version', 'Origin', 'Accept'],
+  credentials: true,
+  optionsSuccessStatus: 200
 };
 
+// Aplicar CORS a todas las rutas
 app.use(cors(corsOptions));
+
+// Middleware para procesar JSON
 app.use(express.json());
 
-// Verificación más detallada de la API key
+// Verificación de la API key
 if (!process.env.ANTHROPIC_API_KEY) {
   console.error('Error: ANTHROPIC_API_KEY no está definida en las variables de entorno');
   process.exit(1);
 } else {
   console.log('API key configurada correctamente');
 }
+
+// Middleware para manejar opciones CORS preflighted
+app.options('*', cors(corsOptions));
 
 // Ruta raíz explícita
 app.get('/', (req, res) => {
@@ -104,4 +112,4 @@ app.use((err, req, res, next) => {
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
-}); 
+});
