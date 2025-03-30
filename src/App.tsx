@@ -22,7 +22,14 @@ function App() {
     }));
 
     try {
-      const response = await fetch('/api/claude', {
+      // Usar la variable de entorno si está disponible, o el proxy local si no
+      const apiUrl = import.meta.env.VITE_API_URL 
+        ? `${import.meta.env.VITE_API_URL}/api/claude` 
+        : '/api/claude';
+      
+      console.log('Enviando solicitud a:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,10 +47,16 @@ function App() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Error ${response.status}:`, errorText);
-        throw new Error(`Error al comunicarse con Claude: ${response.status} - ${errorText}`);
+        throw new Error(`Error al comunicarse con Claude: ${response.status} - ${errorText || 'Sin respuesta'}`);
       }
 
-      const data = await response.json();
+      // Verificar que la respuesta tenga contenido antes de intentar parsear JSON
+      const text = await response.text();
+      if (!text) {
+        throw new Error('Respuesta vacía del servidor');
+      }
+      
+      const data = JSON.parse(text);
       
       // Manejo mejorado de la respuesta de la API
       const assistantMessage: Message = {
@@ -73,7 +86,7 @@ function App() {
       <header className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-2">
           <Bot className="w-8 h-8 text-purple-500" />
-          <h1 className="text-xl font-semibold text-gray-800"> AI Agent Chat</h1>
+          <h1 className="text-xl font-semibold text-gray-800">AI Agent Chat</h1>
         </div>
       </header>
 
@@ -93,7 +106,7 @@ function App() {
           {chatState.isLoading && (
             <div className="flex items-center justify-center gap-2 text-gray-500">
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-500 border-t-transparent" />
-              <span>Claude está escribiendo...</span>
+              <span>El agente está escribiendo...</span>
             </div>
           )}
           
